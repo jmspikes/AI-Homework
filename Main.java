@@ -1,10 +1,8 @@
-package bfs;
-
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Stack;
 import java.util.TreeSet;
 
 class Main {
@@ -14,13 +12,11 @@ class Main {
 		Board initial = new Board(null);
 		
 		initial.drawBoard();
-//		initial.printBoard();
-		
+		//initial.printBoard();
 		BFS breadth = new BFS(initial);
 	
 		System.exit(0);
 	}
-	
 }
 
 class BFS{
@@ -43,18 +39,15 @@ class BFS{
 		visited.add(b);
 		
 		while(!(queue.isEmpty()) && isFound == false){
-			
 			vertex = queue.poll();
-
 			Board cV = copy(vertex);
 			
 				//find all neighbors
-				for(int pos = 0; pos < 8; pos++){
+				for(int pos = 0; pos < 22; pos++){
 					move = new Movement(cV);
 					move.tryMove(pos, 1);
 					move.tryMove(pos, -1);
 					for(int i = 0; i < move.ret.size(); i++){
-						
 						if(!(visited.contains(move.ret.get(i)))){
 							queue.add(move.ret.get(i));
 							visited.add(move.ret.get(i));
@@ -72,22 +65,31 @@ class BFS{
 			
 			route.add(finalBoard.state);
 			moveCount++;
+//			finalBoard.printBoard();
 			if(finalBoard.parent == null){
 				go = false;
 			}
 			else
-				finalBoard = finalBoard.parent;
-			
+				finalBoard = finalBoard.parent;	
 		}
 		
+		PrintWriter writer = null;
+		try {
+			writer= new PrintWriter("results.txt", "UTF-8");
+				
 		byte[] by;
-		for(int i = 0; i < route.size(); i++){
+		for(int i = route.size()-1; i >= 0; i--){
 			 by = route.get(i);
-			 for(int j = 0; j < by.length; j++)
-				 System.out.print(by[j]+ " ");
-			 System.out.println();
+			 for(int j = 0; j < 11; j++)
+				 writer.print("("+by[2*j]+","+by[2*j+1]+") ");
+			 writer.println();
 		}
-		System.out.println("Move Count: " + moveCount);
+		
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally{
+			writer.close();
+		}
 
 	}
 	
@@ -108,8 +110,7 @@ class BFS{
 				c.board[j][i] = item.board[j][i];
 		
 		return c;
-	}
-	
+	}	
 }
 
 class Movement{
@@ -117,7 +118,6 @@ class Movement{
 	Board toCheck;
 	ArrayList<Board> ret;
 	Movement(Board vertex){
-		
 		toCheck = vertex;
 		ret = new ArrayList<Board>();
 	}
@@ -129,16 +129,11 @@ class Movement{
 	
 		t.state[id] +=direction;
 		t.drawBoard();
-//		t.printBoard();
-		
 		//if the board move is valid, return it to be added to valid moves queue
 		if(t.isStateValid(t)){
-//			System.out.println("valid");
-			ret.add(t);}
-//		else 
-//			System.out.println("not valid");
-	}
-	
+			ret.add(t);
+			}
+	}	
 }
 
 class Board {
@@ -159,12 +154,12 @@ class Board {
 		board = new boolean[10][10];
 		parent = b;
 		takenSpaces = 0;
-		drawnBlocks = 0;
-		
+		drawnBlocks = 0;	
 	}
 	
 	public void drawBoard(){
 	
+		//mgashler code
 		for(int i = 0; i < 10; i++) { this.b(i, 0); this.b(i, 9); }
 		for(int i = 1; i < 9; i++) { this.b(0, i); this.b(9, i); }
 		b(1, 1); b(1, 2); b(2, 1);
@@ -179,6 +174,22 @@ class Board {
 		shape(1, 1, 5, 1, 6, 2, 6);
 		//navy block
 		shape(2, 2, 5, 3, 5, 3, 6);
+		//pink block
+		shape(3, 3, 7, 3, 8, 4, 8);
+		//yellow block
+		shape(4, 4, 7, 5, 7, 5, 8);
+		//tan block
+		shape(5, 6, 7, 7, 7, 6, 8);
+		//skyblue block
+		shape(6, 5, 4, 5, 5, 5, 6, 4, 5);
+		//green block
+		shape(7, 6, 4, 6, 5, 6, 6, 7, 5);
+		//cyan block
+		shape(8, 8, 5, 8, 6, 7, 6);
+		//blue block
+		shape(9, 6, 2, 6, 3, 5, 3);
+		//orange block
+		shape(10, 5, 1, 6, 1, 5, 2);
 		}
 	
 	public void b(int x, int y){
