@@ -9,12 +9,9 @@ class Main {
 
 	public static void main(String[] args) {
 
-		Board initial = new Board(null);
-		
+		Board initial = new Board(null);	
 		initial.drawBoard();
-		//initial.printBoard();
 		BFS breadth = new BFS(initial);
-	
 		System.exit(0);
 	}
 }
@@ -23,11 +20,11 @@ class BFS{
 	
 	Queue<Board> queue;
 	TreeSet<Board> visited;
+	ArrayList<byte[]> route;
 	StateComparator comp = new StateComparator();
 	Board finalBoard;
 	Board vertex;
 	Movement move;
-	ArrayList<byte[]> route;
 	boolean isFound = false;
 	int moveCount = 0;
 
@@ -40,11 +37,10 @@ class BFS{
 		
 		while(!(queue.isEmpty()) && isFound == false){
 			vertex = queue.poll();
-			Board cV = copy(vertex);
 			
 				//find all neighbors
 				for(int pos = 0; pos < 22; pos++){
-					move = new Movement(cV);
+					move = new Movement(vertex);
 					move.tryMove(pos, 1);
 					move.tryMove(pos, -1);
 					for(int i = 0; i < move.ret.size(); i++){
@@ -64,15 +60,16 @@ class BFS{
 		while(go){
 			
 			route.add(finalBoard.state);
-			moveCount++;
-//			finalBoard.printBoard();
+			moveCount++;					
+				
+
 			if(finalBoard.parent == null){
 				go = false;
 			}
 			else
 				finalBoard = finalBoard.parent;	
 		}
-		
+				
 		PrintWriter writer = null;
 		try {
 			writer= new PrintWriter("results.txt", "UTF-8");
@@ -90,27 +87,9 @@ class BFS{
 		} finally{
 			writer.close();
 		}
-
+		
 	}
 	
-	public Board copy(Board item){
-		
-		Board c;
-		
-		c = new Board(null);
-		for(int i = 0; i < item.state.length; i++)
-			c.state[i] = item.state[i];
-		
-		c.drawnBlocks = item.drawnBlocks;
-		c.takenSpaces = item.takenSpaces;
-		c.parent = item.parent;
-		
-		for(int i = 0; i < item.board.length; i++)
-			for(int j = 0; j < item.board.length; j++)
-				c.board[j][i] = item.board[j][i];
-		
-		return c;
-	}	
 }
 
 class Movement{
@@ -124,21 +103,24 @@ class Movement{
 	
 	public void tryMove(int id, int direction){
 		
-		//create new board to check, parent is board to check from
 		Board t = new Board(toCheck);
-	
 		t.state[id] +=direction;
+		for(int i = 0; i < t.board.length; i++){
+			for(int j = 0; j < t.board.length; j++)
+				t.board[j][i] = false;
+		}
 		t.drawBoard();
-		//if the board move is valid, return it to be added to valid moves queue
+
 		if(t.isStateValid(t)){
 			ret.add(t);
 			}
+
 	}	
 }
 
 class Board {
 	
-	boolean[][] board;
+	static boolean[][] board = new boolean[10][10];;
 	byte[] state;
 	Board parent;
 	int takenSpaces;
@@ -150,16 +132,14 @@ class Board {
 		if(b != null)
 			for(int i = 0; i < state.length; i++)
 				state[i] = b.state[i];
-		
-		board = new boolean[10][10];
+			
 		parent = b;
-		takenSpaces = 0;
-		drawnBlocks = 0;	
+
 	}
+	
 	
 	public void drawBoard(){
 	
-		//mgashler code
 		for(int i = 0; i < 10; i++) { this.b(i, 0); this.b(i, 9); }
 		for(int i = 1; i < 9; i++) { this.b(0, i); this.b(9, i); }
 		b(1, 1); b(1, 2); b(2, 1);
@@ -167,7 +147,7 @@ class Board {
 		b(1, 7); b(1, 8); b(2, 8);
 		b(8, 7); b(7, 8); b(8, 8);
 		b(3, 4); b(4, 4); b(4, 3);
-		
+
 		//red block
 		shape(0, 1, 3, 2, 3, 1, 4, 2, 4);
 		//green block
@@ -192,23 +172,23 @@ class Board {
 		shape(10, 5, 1, 6, 1, 5, 2);
 		}
 	
+	
 	public void b(int x, int y){
-		//if the spaces is taken it wont be counted, if takenSpaces != drawnBlocks then we have drawn over
-		//a block making the state invalid
 		if(this.board[x][y] == false){
 			this.takenSpaces++;
 		}
 		this.board[x][y] = true;
 		this.drawnBlocks++;	
+
 	}
-	//mgashler code	
+
 	public void shape(int id, int x1, int y1, int x2, int y2, int x3, int y3)
 	{
 		b(state[2 * id] + x1, state[2 * id + 1] + y1);
 		b(state[2 * id] + x2, state[2 * id + 1] + y2);
 		b(state[2 * id] + x3, state[2 * id + 1] + y3);
 	}
-	//mgashler code
+
 	public void shape(int id, int x1, int y1, int x2, int y2,
 		int x3, int y3, int x4, int y4)
 	{
@@ -252,4 +232,6 @@ class StateComparator implements Comparator<Board>
 		}
 		return 0;
 	}
+
+
 }
