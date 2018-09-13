@@ -1,4 +1,4 @@
-package search;
+package homework2;
 // The contents of this file are dedicated to the public domain.
 // (See http://creativecommons.org/publicdomain/zero/1.0/)
 
@@ -91,9 +91,11 @@ public class View extends JFrame implements ActionListener {
 		public void paintComponent(Graphics g) {
 
 			// Give the agents a chance to make decisions
-			if(!controller.update()) {
-				View.this.dispatchEvent(new WindowEvent(View.this, WindowEvent.WINDOW_CLOSING)); // Close this window
-			}
+
+				if(!controller.update()) {
+					View.this.dispatchEvent(new WindowEvent(View.this, WindowEvent.WINDOW_CLOSING)); // Close this window
+				}
+
 
 			// Draw the view
 			drawTerrain(g);

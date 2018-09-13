@@ -1,8 +1,9 @@
-package search;
+package homework2;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.TreeSet;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.awt.event.MouseEvent;
 import java.awt.Graphics;
@@ -10,44 +11,47 @@ import java.awt.Color;
 
 class Agent {
 
-	Integer x = null;
-	Integer y = null;
 	PlanRoute route;
 	//ArrayList<MyState> r = new ArrayList<MyState>();
 	MyState which;
-
+	MyState goalState;
+	Graphics g = null;
 	Agent(){
 		
 	}
 	
 	void drawPlan(Graphics g, Model m) {
 		g.setColor(Color.red);
-		g.drawLine((int)m.getX(), (int)m.getY(), (int)m.getDestinationX(), (int)m.getDestinationY());
+		if(goalState!=null)
+			g.drawLine((int)m.getX(), (int)m.getY(), (int)goalState.state.x, (int)goalState.state.y);
 	}
 
 	void update(Model m)
 	{
 		Controller c = m.getController();
+
 		while(true)
 		{
 			route = new PlanRoute(m, c);	
 			MouseEvent e = c.nextMouseEvent();
-			if(e == null && x == null)
+			if(e == null && goalState == null)
 				break;
 			if(e != null) {
-				x = e.getX();
-				y = e.getY();
+				goalState = new MyState(0, null, 0);
+				goalState.state.x = e.getX();
+				goalState.state.y = e.getY();
+				g = c.view.getGraphics();	
+				g.setColor(Color.yellow);
 			}
-			m.setDestination(x, y);
-			
+			m.setDestination(goalState.state.x, goalState.state.y);
 			//MyState goal = new MyState(0, null, 0);
 			//goal.state.x = m.getDestinationX();
 			//goal.state.y = m.getDestinationY();
-			MyState current = new MyState(0,route.frontier.peek(),0);
+			MyState current = new MyState(0,null,0);
 			current.state.x = m.getX();
 			current.state.y = m.getY();
-			which = route.uniformCost(current);
-			
+			which = route.uniformCost(current, goalState);
+			drawFrontier();
 			/*
 			MyState iterator = which.parent;
 			//crawl back up the parent chain to find next move, stop at first move
@@ -59,19 +63,30 @@ class Agent {
 					}
 				}
 			}*/
-			MyState select = null;
-				select = which;
-				if(select.parent != null) {
-					while(select.parent.parent != null) {
-						select = select.parent;
+			//ArrayList<Float> xW = new ArrayList<Float>();
+			//ArrayList<Float> yW = new ArrayList<Float>();
+			if(which != null){
+				if(which.parent!=null){
+					while(which.parent.parent != null){
+						which = which.parent;
 					}
 				}
-				//System.out.println("("+select.state.x+","+select.state.y+")");
-				m.setDestination(select.state.x, select.state.y);
-				break;
+			}
+				
+			//System.out.println("("+select.state.x+","+select.state.y+")");
+			m.setDestination(which.state.x, which.state.y);
+			break;
 		}
 		
 	}
+	
+	void drawFrontier(){
+		if(route.frontier != null){
+			for(MyState d : route.frontier)
+					g.fillOval((int)d.state.x, (int)d.state.y, 10, 10);
+		}
+	}
+
 
 	public static void main(String[] args) throws Exception
 	{
@@ -111,20 +126,15 @@ class MyState{
 
 class PlanRoute{
 
-	PriorityQueue<MyState> frontier;
-	TreeSet<MyState> beenThere;
-	StateComparator compare; 
-	CompareCost compareCost;
+
 	Model link;
 	Graphics g;
 	boolean completed;
+	ArrayList<MyState> toDraw;
+	PriorityQueue<MyState> frontier;
 	
 	PlanRoute(Model link, Controller vLink){
-		
-		compare = new StateComparator();
-		compareCost = new CompareCost();
-		frontier = new PriorityQueue<MyState>(compareCost);
-		beenThere = new TreeSet<MyState>(compare);
+	
 		this.link = link;
 		g = vLink.view.getGraphics();
 		g.setColor(Color.yellow);
@@ -132,15 +142,20 @@ class PlanRoute{
 
 	}
 
-	public MyState uniformCost(MyState startState){
-
+	public MyState uniformCost(MyState startState, MyState goalState){
+		
+		StateComparator compare = new StateComparator();
+		CompareCost compareCost = new CompareCost();
+		frontier = new PriorityQueue<MyState>(compareCost);
+		TreeSet<MyState> beenThere = new TreeSet<MyState>(compare);
+		
+		startState.cost = 0.0;
+		startState.parent = null;
 		beenThere.add(startState);
 		frontier.add(startState);
-		int a = (int) link.getDestinationX();
-		int b = (int) link.getDestinationY();
-		int j = 0;
 		while(frontier.size() > 0){
 			MyState s = frontier.poll();
+			
 			if(s.state.x > link.XMAX) 
 				continue;
 			if(s.state.x < 0)
@@ -157,25 +172,31 @@ class PlanRoute{
 				this.complete = true;
 				return s;
 			}*/
-			if(((int)(s.state.x/10) <= (int)(link.getDestinationX()/10)+10 && 
-				(int)(s.state.x/10) >= (int)(link.getDestinationX()/10)    && 
-				(int)(s.state.y/10) <= (int)(link.getDestinationY()/10)+10 &&
-				(int)(s.state.y/10) >= (int)(link.getDestinationY()/10))) {
+			if(((int)(s.state.x) <= (int)(link.getDestinationX()+10) && 
+				(int)(s.state.x) >= (int)(link.getDestinationX())    && 
+				(int)(s.state.y) <= (int)(link.getDestinationY()+10) &&
+				(int)(s.state.y) >= (int)(link.getDestinationY()))) {
+				//	g.fillOval((int)child.state.x, (int)child.state.y, 10, 10);
+
+					
 					return s;
 				}
+
+			
 			for(int i = 1; i < 9; i++){
 				MyState child = new MyState(0, s, i);
-				g.fillOval((int)child.state.x, (int)child.state.y, 10, 10);
-
 				float acost = calculateCost(s, child);
+				child.cost = acost;
 				if(beenThere.contains(child)) {
-					MyState oldChild = beenThere.floor(child);
+					MyState oldChild = new MyState(acost, beenThere.floor(child), 0);
 					if(s.cost + acost < oldChild.cost){
 						oldChild.cost = s.cost + acost;
 						oldChild.parent = s;
 					}
 				}
 				else{
+				//	g.fillOval((int)child.state.x, (int)child.state.y, 10, 10);
+
 					child.cost = s.cost + acost;
 					child.parent = s;
 					frontier.add(child);
@@ -185,9 +206,7 @@ class PlanRoute{
 			}
 
 		}		
-		
-		
-		return null;
+		throw new RuntimeException("There is no path to the goal");
 	}
 	
 	 
@@ -195,16 +214,16 @@ class PlanRoute{
 	public float calculateCost(MyState current, MyState direction){
 		
 		float cost;
-		if(current.state.x >= link.XMAX)
-			return cost = 100;
-		if(current.state.y >= link.YMAX)
-			return cost = 100;
-		if(current.state.x < 0)
-			return cost = 100;
-		if(current.state.y < 0)
-			return cost = 100;
+		if(direction.state.x >= link.XMAX)
+			return cost = 1;
+		if(direction.state.y >= link.YMAX)
+			return cost = 1;
+		if(direction.state.x < 0)
+			return cost = 1;
+		if(direction.state.y < 0)
+			return cost = 1;
 		
-		return cost = 1.0f / link.getTravelSpeed(current.state.x, current.state.y);
+		cost = 1.0f / link.getTravelSpeed(direction.state.x, direction.state.y);
 		/*
 		float cost = 0;
 		//gets travel speed of the current tile
@@ -228,6 +247,16 @@ class PlanRoute{
 			float yS = ((direction.state.y - current.state.y)*(direction.state.y - current.state.y));
 			cost = (float)(Math.sqrt(xS+yS)*travelSpeed);
 		}*/
+		
+		/*
+		float speed = link.getTravelSpeed(current.state.x, current.state.y);
+		float dx = direction.state.x - current.state.x;
+		float dy = direction.state.y - current.state.y;
+		float dist = (float) Math.sqrt(dx*dx + dy*dy);
+		cost = speed / Math.max(speed, dist);*/
+		
+		
+		return cost;
 	}
 
 }
@@ -250,7 +279,7 @@ class StateComparator implements Comparator<MyState>
 
 		if(a.state.x < b.state.x || a.state.y < b.state.y)
 			return -1;
-		else if(a.state.x > b.state.x || b.state.y > b.state.y)
+		else if(a.state.x > b.state.x || a.state.y > b.state.y)
 			return 1;
 
 		return 0;
