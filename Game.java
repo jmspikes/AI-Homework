@@ -1,5 +1,13 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
+
+import javafx.scene.shape.Path;
 
 class Game
 {
@@ -19,20 +27,23 @@ class Game
 		// todo: YOUR CODE WILL START HERE.
 		//       Please write some code to evolve this population.
 		//       (For tournament selection, you will need to call Controller.doBattleNoGui(agent1, agent2).)
+		
 		int fCounter = 0;
 		int iterations = 0;
+
+		
 
 		//for(int simulate = 0; simulate < 1000; simulate++){
 		while(true) {
 		iterations++;
-		if(iterations % 50 == 0) {
-			System.out.println(getCurrentFitness());
-		}
+		if(iterations % 20 == 0) 
+			System.out.println(getCurrentFitness(population));
+		
 		int decide = r.nextInt(4);
 		ArrayList<Integer> winners = new ArrayList<Integer>();
 		switch(decide){
 			case 0:
-				System.out.println("mutated");
+				//System.out.println("mutated");
 				for(int i = 0; i < population.rows(); i++){
 					
 					double probability = r.nextDouble();
@@ -42,17 +53,15 @@ class Game
 		
 						double m = 1 * r.nextGaussian();
 						int randElement = r.nextInt(mutate.length);
-						mutate[randElement] +=m;
-						
-					}
-					
+						mutate[randElement] +=m;				
+					}	
 				}			
 				break;
 			
 				
 	
 			case 1:
-				System.out.println("Fighting");
+				//System.out.println("Fighting");
 				try {
 		
 					int who = 0;			
@@ -96,7 +105,7 @@ class Game
 				break;
 			
 			case 2:
-				System.out.println("Replenish");
+				//System.out.println("Replenish");
 				while(population.rows() < 100){
 				//parent to mate
 				int firstP = r.nextInt(population.rows());
@@ -117,7 +126,6 @@ class Game
 					}
 				}
 				
-				
 				double closest = 100;
 				double[] candidate = null;
 				//try to mate with winners, else just pick someone random
@@ -131,8 +139,7 @@ class Game
 						closest = scores.get(i);
 						candidate = population.row(winners.get(i));
 						}
-					}
-					
+					}		
 				}
 		
 				if(candidate == null)
@@ -151,11 +158,10 @@ class Game
 		
 			case 3:
 				try {
-					System.out.println("Fighting reflex agent");
+					//System.out.println("Fighting reflex agent");
 					int result = 0;
 					int a = r.nextInt(population.rows());
 					result = Controller.doBattleNoGui(new ReflexAgent(), new NeuralAgent(population.row(a)));
-					System.out.println(result);
 					if(result == -1) {
 						return population.row(a);
 						//beat= a;
@@ -171,17 +177,45 @@ class Game
 		//return population.row(beat);
 	}
 
-	static double getCurrentFitness() {
-		double fit = 0;
+	static double getCurrentFitness(Matrix m) {
+		double biggusFitus = -1000;
+		ArrayList<Double> fitness = new ArrayList<Double>();
+		double cs = 0.0;
+		for(int i = 0; i < m.rows(); i++) {
+			double[] current = m.row(i);
+			for(int j = 0; j < current.length; j++)
+				cs += current[j];
+			fitness.add(cs);
+		}
+	
+		for(int i = 0; i < fitness.size(); i++) {
+			if(fitness.get(i) > biggusFitus)
+				biggusFitus = fitness.get(i);
+		}
 		
-		return fit;
+		return biggusFitus;
 	}
 
 	public static void main(String[] args) throws Exception
 	{
-		double[] w = evolveWeights();
+		//double[] w = evolveWeights();
+		
+		
+		FileInputStream fis = new FileInputStream("output.txt");
+		DataInputStream dis = new DataInputStream(fis);
+		double[] w = new double[291];
+		for(int i = 0; i < w.length; i++) {
+			w[i] = dis.readDouble();
+		}
+		/*FileOutputStream fos = new FileOutputStream("output.txt");
+		DataOutputStream dos = new DataOutputStream(fos);
+		
+		for(int i = 0; i < w.length; i++)
+			dos.writeDouble(w[i]);*/
+		
 		
 		Controller.doBattle(new ReflexAgent(), new NeuralAgent(w));
+		System.out.println();
 	}
 
 }
