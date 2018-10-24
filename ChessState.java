@@ -1,4 +1,4 @@
-package Homework5;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -103,7 +103,7 @@ class ChessState {
 					score -= value;
 			}
 		}
-		return score + rand.nextInt(3) - 1;
+		return score + rand.nextInt(20) - 1;
 	}
 
 	/// Returns an iterator that iterates over all possible moves for the specified color
@@ -406,103 +406,144 @@ class ChessState {
 		}
 	}
 
-	ChessMove ideal;
 	public static void main(String[] args) {
 		ChessState s = new ChessState();
-		
+		Random rand = new Random();
 		String player1 = args[0];
 		String player2 = args[1];
 		s.printBoard(System.out);
 		while(true){
 			s.userInput(player1, player2, s);
+
 			if(!player1.equals("0")){
-				s.bestMove(s, Integer.parseInt(player1), true, -1000, 1000);
-				s.move(s.ideal.xSource, s.ideal.ySource, s.ideal.xDest, s.ideal.yDest);
+				ChessMove m = s.miniMax(Integer.parseInt(player1), s, true, rand);
+					if(s.move(m.xSource, m.ySource, m.xDest, m.yDest)){
+						s.printBoard(System.out);
+						System.out.println("White wins!");
+						System.exit(0);
+					}
 				s.printBoard(System.out);
+				System.out.println();
 			}
 			if(!player2.equals("0")){
-				s.bestMove(s, Integer.parseInt(player2), false, 1000, -1000);
-				s.move(s.ideal.xSource, s.ideal.ySource, s.ideal.xDest, s.ideal.yDest);
-				s.printBoard(System.out);
-			}
+				ChessMove m = s.miniMax(Integer.parseInt(player2), s, false, rand);
+					if(s.move(m.xSource, m.ySource, m.xDest, m.yDest)){
+						s.printBoard(System.out);
+						System.out.println("Black wins!");
+						System.exit(0);
+					}
 
-			/*
-			s.resetBoard();
-			s.printBoard(System.out);
-			System.out.println();
-			System.out.println(s.isValidMove(0, 1, 0, 2));
-	
-			s.move(0, 1, 0, 2);
-			*/
-			//s.move(1/*B*/, 0/*1*/, 2/*C*/, 2/*3*/);
-			//s.printBoard(System.out);
+				s.printBoard(System.out);
+				System.out.println();
+
+			}
 		
 		}
 	}
 
-	int bestMove(ChessState s, int toDepth, boolean white, int alpha, int beta){
-		Random rand = new Random();
-		int value = 0;;
-		if(toDepth == 0)
-			return s.heuristic(rand);
+	void print(ChessState s){
+		s.printBoard(System.out);
+	}
+	ChessMove miniMax(int depth, ChessState s, boolean white, Random rand){
+		int bestMove = Integer.MIN_VALUE;
+		ChessMoveIterator it = s.iterator(white);
+		ChessState.ChessMove bestM = new ChessState.ChessMove();
+		ChessState before = new ChessState();
+		before.m_rows = new int[8];
+		for(int i = 0; i < s.m_rows.length; i++)
+			before.m_rows[i] = s.m_rows[i];
+		ArrayList<ChessMove> equalControl = new ArrayList<ChessMove>();
+		ArrayList<Integer> values = new ArrayList<Integer>();
+		while(it.hasNext()){
+			ChessState.ChessMove m = it.next();
+			equalControl.add(m);
+			s.move(m.xSource, m.ySource, m.xDest, m.yDest);
+			int value = bestMove(s, depth - 1, !white, -10000, 10000, rand);
+			values.add(value);
+			for(int i = 0; i < s.m_rows.length; i++)
+				s.m_rows[i] = before.m_rows[i];
+				if(value >= bestMove || (Math.abs(value)-1000 >= bestMove)){						
+					bestMove = value;
+					bestM.xDest = m.xDest;
+					bestM.xSource = m.xSource;
+					bestM.yDest = m.yDest;
+					bestM.ySource = m.ySource;
+					if((Math.abs(value)-1000 >= bestMove))
+						return bestM;
+				}
+			
+
+		}
 		
+		
+		boolean same = true;
+		for(int i = 0; i < values.size(); i++){
+			if(values.get(i) != values.get(0)){
+				same = false;
+				break;
+			}
+		}
+		
+		if(same)
+			return equalControl.get(rand.nextInt(equalControl.size())); 
+		return bestM;
+	}
+
+	int bestMove(ChessState s, int depth, boolean white, int alpha, int beta, Random rand){
+
+		if(depth == 0){
+			if(!white)
+				return -s.heuristic(rand);
+			return s.heuristic(rand);
+		}
+		ChessMoveIterator it = s.iterator(white);
+		ChessState before = new ChessState();
+		before.m_rows = new int[8];
+		for(int i = 0; i < s.m_rows.length; i++)
+			before.m_rows[i] = s.m_rows[i];
 		//maximizing player
 		if(white){
-			value = Integer.MIN_VALUE;
-			ChessMoveIterator it = s.iterator(white);
+			int value = Integer.MIN_VALUE;
 			ChessState.ChessMove m = null;
 			//for each child
 			while(it.hasNext()){
 				m = it.next();
 				//try move find value
 				s.move(m.xSource, m.ySource, m.xDest, m.yDest);
-				s.printBoard(System.out);
-				value = Math.max(value, bestMove(s, toDepth-1, !white, alpha, beta ));
+				//print(s);
+				value = Math.max(value, bestMove(s, depth-1, !white, alpha, beta, rand));
 				//reset move
-				s.move( m.xDest, m.yDest, m.xSource, m.ySource);
+				for(int i = 0; i < s.m_rows.length; i++)
+					s.m_rows[i] = before.m_rows[i];
+				//print(s);
 				alpha = Math.max(alpha, value);
-				if(alpha >= beta){
-					s.ideal = m;
-					break;
-					//return value;
+				if(beta <= alpha){
+					return value;
 				}
 			}
-			s.ideal = m;
 			return value;
 		}
 		else{
-			value = Integer.MAX_VALUE;
-			ChessMoveIterator it = s.iterator(white);
+			int value = Integer.MAX_VALUE;
 			ChessState.ChessMove m = null;
 			//for each child
 			while(it.hasNext()){
 				m = it.next();
 				//try move find value
 				s.move(m.xSource, m.ySource, m.xDest, m.yDest);
-				s.printBoard(System.out);
-				value = Math.min(value, bestMove(s, toDepth-1, !white, alpha, beta ));
+				//print(s);
+				value = Math.min(value, bestMove(s, depth-1, !white, alpha, beta, rand));
 				//reset move
-
-				s.move( m.xDest, m.yDest, m.xSource, m.ySource);
-
+				for(int i = 0; i < s.m_rows.length; i++)
+					s.m_rows[i] = before.m_rows[i];
+				//print(s);
 				beta = Math.min(beta, value);
-				if(alpha >= beta){
-					break;
-					//return value;
+				if(beta <= alpha){
+					return value;
 				}
 			}
-			s.ideal = m;
 			return value;
-		}
-		
-		/*
-		Score score;
-		if(side == 1)
-			score = s.maxTurn(s, 0);
-		else
-			score = s.minTurn(s, 0);
-		*/
-		
+		}	
 	}
 	
 	String getMove(Scanner input, int player){
@@ -534,8 +575,12 @@ class ChessState {
 				if(!isLight || !valid)
 					System.out.println("  Invalid move!");
 			}
-			s.move(pRowStart, pColStart, pRowDest, pColDest);
+			boolean win = s.move(pRowStart, pColStart, pRowDest, pColDest);
 			s.printBoard(System.out);
+			if(win){
+				System.out.println("White wins!");
+				System.exit(0);
+			}
 			
 		}
 		
@@ -561,8 +606,12 @@ class ChessState {
 				if(isLight || !valid)
 					System.out.println("Invalid move!");
 			}
-			s.move(pRowStart, pColStart, pRowDest, pColDest);
+			boolean win = s.move(pRowStart, pColStart, pRowDest, pColDest);
 			s.printBoard(System.out);
+			if(win){
+				System.out.println("Black wins!");
+				System.exit(0);
+			}
 			
 		}
 	}
