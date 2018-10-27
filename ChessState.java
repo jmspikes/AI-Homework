@@ -1,4 +1,3 @@
-
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -103,7 +102,7 @@ class ChessState {
 					score -= value;
 			}
 		}
-		return score + rand.nextInt(20) - 1;
+		return score + rand.nextInt(3) - 1;
 	}
 
 	/// Returns an iterator that iterates over all possible moves for the specified color
@@ -350,6 +349,7 @@ class ChessState {
 		int ySource;
 		int xDest;
 		int yDest;
+		int piece;
 	}
 
 	/// Iterates through all the possible moves for the specified color.
@@ -432,7 +432,6 @@ class ChessState {
 						System.out.println("Black wins!");
 						System.exit(0);
 					}
-
 				s.printBoard(System.out);
 				System.out.println();
 
@@ -444,6 +443,8 @@ class ChessState {
 	void print(ChessState s){
 		s.printBoard(System.out);
 	}
+	ChessMove prevW = new ChessMove();
+	ChessMove prevB = new ChessMove();
 	ChessMove miniMax(int depth, ChessState s, boolean white, Random rand){
 		int bestMove = Integer.MIN_VALUE;
 		ChessMoveIterator it = s.iterator(white);
@@ -452,48 +453,74 @@ class ChessState {
 		before.m_rows = new int[8];
 		for(int i = 0; i < s.m_rows.length; i++)
 			before.m_rows[i] = s.m_rows[i];
-		ArrayList<ChessMove> equalControl = new ArrayList<ChessMove>();
+		ArrayList<ChessMove> moves = new ArrayList<ChessMove>();
 		ArrayList<Integer> values = new ArrayList<Integer>();
 		while(it.hasNext()){
 			ChessState.ChessMove m = it.next();
-			equalControl.add(m);
+			moves.add(m);
 			s.move(m.xSource, m.ySource, m.xDest, m.yDest);
 			int value = bestMove(s, depth - 1, !white, -10000, 10000, rand);
 			values.add(value);
 			for(int i = 0; i < s.m_rows.length; i++)
 				s.m_rows[i] = before.m_rows[i];
-				if(value >= bestMove || (Math.abs(value)-1000 >= bestMove)){						
+				if(value >= bestMove ){						
 					bestMove = value;
 					bestM.xDest = m.xDest;
 					bestM.xSource = m.xSource;
 					bestM.yDest = m.yDest;
 					bestM.ySource = m.ySource;
-					if((Math.abs(value)-1000 >= bestMove))
-						return bestM;
 				}
 			
 
 		}
 		
-		
-		boolean same = true;
-		for(int i = 0; i < values.size(); i++){
-			if(values.get(i) != values.get(0)){
-				same = false;
-				break;
+		if(white){
+			int max = -1000;
+			int maxLoc = 0;
+			for(int i = 0; i < values.size(); i++){
+				if(values.get(i) >= max){
+					if(prevW.xDest == moves.get(i).xSource &&
+					   prevW.yDest == moves.get(i).ySource &&
+					   prevW.piece == s.getPiece(moves.get(i).xSource, moves.get(i).ySource))
+						continue;
+					max = values.get(i);
+					maxLoc = i;
+					
+				}	
 			}
+			prevW = new ChessMove();
+			prevW = moves.get(maxLoc);
+			prevW.piece = s.getPiece(moves.get(maxLoc).xSource, moves.get(maxLoc).ySource);
+			return moves.get(maxLoc);
 		}
 		
-		if(same)
-			return equalControl.get(rand.nextInt(equalControl.size())); 
+		if(!white){
+			int min = 1000;
+			int minLoc = 0;
+			for(int i = 0; i < values.size(); i++){
+				if(values.get(i) <= min){
+					if(prevB.xDest == moves.get(i).xSource &&
+					   prevB.yDest == moves.get(i).ySource &&
+					   prevB.piece == s.getPiece(moves.get(i).xSource, moves.get(i).ySource))
+						continue;
+					min = values.get(i);
+					minLoc = i;
+					
+				}	
+			}
+			prevB = new ChessMove();
+			prevB = moves.get(minLoc);
+			prevB.piece = s.getPiece(moves.get(minLoc).xSource, moves.get(minLoc).ySource);
+			return moves.get(minLoc);
+		}
+		
+		
 		return bestM;
 	}
 
 	int bestMove(ChessState s, int depth, boolean white, int alpha, int beta, Random rand){
 
 		if(depth == 0){
-			if(!white)
-				return -s.heuristic(rand);
 			return s.heuristic(rand);
 		}
 		ChessMoveIterator it = s.iterator(white);
@@ -616,4 +643,3 @@ class ChessState {
 		}
 	}
 }
-
