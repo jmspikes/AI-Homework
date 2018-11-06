@@ -15,7 +15,7 @@ class Main
 	static void test(SupervisedLearner learner, String challenge)
 	{
 		// Load the training data
-		String fn = "C:\\Users\\Jon\\Desktop\\java\\data\\" + challenge;
+		String fn = "data\\" + challenge;
 		Matrix trainFeatures = new Matrix();
 		trainFeatures.loadARFF(fn + "_train_feat.arff");
 		Matrix trainLabels = new Matrix();
