@@ -130,7 +130,6 @@ class RandomForest extends SupervisedLearner{
 		tl = new Matrix();
 		tf.copyMetaData(features);
 		tl.copyMetaData(labels);
-		
 		for(int i = 0; i < amount; i++){
 		// Load the test data
 		Matrix testFeatures = new Matrix();
@@ -162,7 +161,6 @@ class RandomForest extends SupervisedLearner{
 		//DecisionTree f = new DecisionTree();
 		//root = f.buildTree(matrixesF.get(minLoc), matrixesL.get(minLoc));
 		root = holder.get(minLoc);
-		holder.clear();
 		
 	}
 
@@ -284,7 +282,7 @@ class DecisionTree extends SupervisedLearner{
 		double[] row =  features.row(rand.nextInt(features.rows()));
 		double val = row[dividingColumn];
 		
-		for(int iterations = 8; iterations > 0; iterations--){
+		for(int patients = 8; patients > 0; patients--){
 			
 			
 			for(int i = 0; i < features.rows(); i++){
