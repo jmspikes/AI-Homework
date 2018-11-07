@@ -10,7 +10,7 @@ abstract class SupervisedLearner
 	abstract String name();
 
 	/// Train this supervised learner
-	abstract void train(Matrix features, Matrix labels, String fn);
+	abstract void train(Matrix features, Matrix labels);
 
 	/// Make a prediction
 	abstract void predict(double[] in, double[] out);

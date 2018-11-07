@@ -15,14 +15,14 @@ class Main
 	static void test(SupervisedLearner learner, String challenge)
 	{
 		// Load the training data
-		String fn = "data\\" + challenge;
+		String fn = "C:\\Users\\Jon\\Desktop\\java\\data\\" + challenge;
 		Matrix trainFeatures = new Matrix();
 		trainFeatures.loadARFF(fn + "_train_feat.arff");
 		Matrix trainLabels = new Matrix();
 		trainLabels.loadARFF(fn + "_train_lab.arff");
 
 		// Train the model
-		learner.train(trainFeatures, trainLabels, fn);
+		learner.train(trainFeatures, trainLabels);
 
 		// Load the test data
 		Matrix testFeatures = new Matrix();
@@ -107,10 +107,12 @@ class RandomForest extends SupervisedLearner{
 	Matrix tl;
 	Random randy;
 	Node root;
+	ArrayList<Node> holder;
+	double[] mode;
 	RandomForest(int amount){
 		this.amount = amount;
 		randy = new Random(1500);
-		
+		holder = new ArrayList<Node>();
 		
 	}
 	
@@ -120,128 +122,102 @@ class RandomForest extends SupervisedLearner{
 
 	
 
-	void train(Matrix features, Matrix labels, String fn) {
+	void train(Matrix features, Matrix labels) {
 
 		ArrayList<Integer> scores = new ArrayList<Integer>();
-		ArrayList<Node> holder = new ArrayList<Node>();
+		holder = new ArrayList<Node>();
 		DecisionTree d;
 
 		tf = new Matrix();
 		tl = new Matrix();
 		tf.copyMetaData(features);
 		tl.copyMetaData(labels);
+		Matrix fc = new Matrix();
+		fc.copy(features);
+		Matrix lc = new Matrix();
+		lc.copy(labels);
 		for(int i = 0; i < amount; i++){
-		// Load the test data
-		Matrix testFeatures = new Matrix();
-		testFeatures.loadARFF(fn + "_test_feat.arff");
-		Matrix testLabels = new Matrix();
-		testLabels.loadARFF(fn + "_test_lab.arff");
 		d = new DecisionTree();
-		Matrix copyf = new Matrix();
-		copyf.copy(features);
-		Matrix copyl = new Matrix();
-		copyl.copy(labels);
-		generateTrainingData(copyf, copyl);
-		d.train(tf, tl, fn);
-		root = d.root;
-		//get amount of misclassifications
-		int misclassifications = d.countMisclassifications(testFeatures, testLabels);
+		generateTrainingData(fc, lc);
+		d.train(tf, tl);
 		holder.add(d.root);
-		scores.add(misclassifications);
+
 		}
-		
-		int minLoc = 0;
-		int min = Integer.MAX_VALUE;
-		for(int i = 0; i < scores.size(); i++){
-			if(scores.get(i) < min){
-				min = scores.get(i);
-				minLoc = i;
-			}
-		}
-		//DecisionTree f = new DecisionTree();
-		//root = f.buildTree(matrixesF.get(minLoc), matrixesL.get(minLoc));
-		root = holder.get(minLoc);
 		
 	}
 
 	void predict(double[] in, double[] out) {
-
-			Node n = root;
 			InteriorNode node;
 			LeafNode o;
+			ArrayList<double[]> results = new ArrayList<double[]>();
+			double[] returnArray = null;
 			
-			while(true){
-				if(!n.isLeaf()){
-					node =  (InteriorNode) n;
-					if(node.feature == 0){
+			for(int i = 0; i < holder.size(); i++){
+				Node n = holder.get(i);
+				while(true){
+					if(!n.isLeaf()){
+						node =  (InteriorNode) n;
+						if(node.feature == 0){
+							
+							if(in[node.attribute] < node.pivot)
+								n =  node.a;
+							else
+								n =  node.b;
+						}
+						else{
+							
+							if(in[node.attribute] == node.pivot)
+								n = node.a;
+							else
+								n = node.b;
+						}
 						
-						if(in[node.attribute] < node.pivot)
-							n =  node.a;
-						else
-							n =  node.b;
 					}
+						
 					else{
-						
-						if(in[node.attribute] == node.pivot)
-							n = node.a;
-						else
-							n = node.b;
+						o = (LeafNode) n;
+						n = (LeafNode) n;
+						results.add(o.label);
+						break;
 					}
-					
-				}
-					
-				else{
-					o = (LeafNode) n;
-					n = (LeafNode) n;
-					Vec.copy(out, o.label);
-					break;
 				}
 			
+			}
+			returnArray = new double[results.get(0).length];
 			
-		}
+			Matrix parseL = new Matrix();
+			parseL.copyMetaData(tl);
+			
+			for(int i = 0; i < results.size(); i++)
+				parseL.takeRow(results.get(i));
+			
+			for(int i = 0; i < parseL.cols(); i++)
+			{
+				if(parseL.valueCount(i) == 0)
+					returnArray[i] = parseL.columnMean(i);
+				else
+					returnArray[i] = parseL.mostCommonValue(i);
+			}
+			
+			Vec.copy(out, returnArray);
+
+		
+		
 	}
 	
 	void generateTrainingData(Matrix features, Matrix labels){
 		
+		
 		for(int f = 0; f < features.rows(); f++){
+			int offset = randy.nextInt(features.rows()-1);
+			tf.takeRow(features.row(offset));
+			tl.takeRow(labels.row(offset));
 			
-			tf.takeRow(features.removeRow(randy.nextInt(features.rows())));
 		}
 		
-		for(int l = 0; l < labels.rows(); l++){
-			tl.takeRow(labels.removeRow(randy.nextInt(labels.rows())));
-		}
 		
 		
 	}
-		//create new data for each forest
-		/*
-		for(int i = 0; i < amount; i++){
-			
-			Matrix forestF = new Matrix();
-			Matrix forestL = new Matrix();
-			
-			forestF.copyMetaData(features);
-			forestL.copyMetaData(labels);
-			
-			for(int f = 0; f < features.rows(); f++){
-			
-				forestF.takeRow(features.row(randy.nextInt(features.rows())));
-				
-			}
-			
-			for(int l = 0; l < labels.rows(); l++){
-				forestL.takeRow(labels.row(randy.nextInt(labels.rows())));
-			}
-			
-			matrixesF.add(forestF);
-			matrixesL.add(forestL);
-			
-		}
-		
-		
-	}
-	*/
 	
 	
 }
@@ -339,7 +315,7 @@ class DecisionTree extends SupervisedLearner{
 		return "DecisionTree";
 	}
 
-	void train(Matrix features, Matrix labels, String fn) {
+	void train(Matrix features, Matrix labels) {
 
 		root = buildTree(features, labels);
 		
