@@ -1,4 +1,3 @@
-package Homework6;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -46,7 +45,7 @@ class Main
 	{
 		testLearner(new BaselineLearner());
 		testLearner(new DecisionTree());
-		testLearner(new RandomForest(30));
+		testLearner(new RandomForest(50));
 	}
 	
 }
@@ -180,8 +179,7 @@ class RandomForest extends SupervisedLearner{
 						results.add(o.label);
 						break;
 					}
-				}
-			
+				}	
 			}
 			returnArray = new double[results.get(0).length];
 			
@@ -198,28 +196,17 @@ class RandomForest extends SupervisedLearner{
 				else
 					returnArray[i] = parseL.mostCommonValue(i);
 			}
-			
-			Vec.copy(out, returnArray);
-
-		
-		
+			Vec.copy(out, returnArray);		
 	}
 	
-	void generateTrainingData(Matrix features, Matrix labels){
-		
-		
+	void generateTrainingData(Matrix features, Matrix labels){		
 		for(int f = 0; f < features.rows(); f++){
 			int offset = randy.nextInt(features.rows()-1);
 			tf.takeRow(features.row(offset));
 			tl.takeRow(labels.row(offset));
 			
-		}
-		
-		
-		
+		}		
 	}
-	
-	
 }
 
 
@@ -239,7 +226,7 @@ class DecisionTree extends SupervisedLearner{
 		
 		if(features.rows() != labels.rows())
 			throw new RuntimeException("Mismatching features and labels!");
-		if(features.rows() < 5 || sameLabels(labels)){
+		if(features.rows() < 10 || labels.rows()< 10 || sameLabels(labels)){
 			return new LeafNode(labels);
 		}
 		Matrix featA = new Matrix();
