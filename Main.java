@@ -1,7 +1,4 @@
-
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Random;
 
 // ----------------------------------------------------------------
@@ -14,7 +11,7 @@ class Main
 	static void test(SupervisedLearner learner, String challenge)
 	{
 		// Load the training data
-		String fn = "data\\" + challenge;
+		String fn = "C:\\Users\\Jon\\Desktop\\AI Homework\\Homework6\\data\\" + challenge;
 		Matrix trainFeatures = new Matrix();
 		trainFeatures.loadARFF(fn + "_train_feat.arff");
 		Matrix trainLabels = new Matrix();
@@ -110,7 +107,7 @@ class RandomForest extends SupervisedLearner{
 	double[] mode;
 	RandomForest(int amount){
 		this.amount = amount;
-		randy = new Random(1500);
+		randy = new Random(800);
 		holder = new ArrayList<Node>();
 		
 	}
@@ -119,11 +116,8 @@ class RandomForest extends SupervisedLearner{
 		return "Random Forest";
 	}
 
-	
-
 	void train(Matrix features, Matrix labels) {
 
-		ArrayList<Integer> scores = new ArrayList<Integer>();
 		holder = new ArrayList<Node>();
 		DecisionTree d;
 
@@ -140,9 +134,7 @@ class RandomForest extends SupervisedLearner{
 		generateTrainingData(fc, lc);
 		d.train(tf, tl);
 		holder.add(d.root);
-
-		}
-		
+		}	
 	}
 
 	void predict(double[] in, double[] out) {
@@ -217,7 +209,7 @@ class DecisionTree extends SupervisedLearner{
 	
 	DecisionTree(){
 		columns = 0;
-		rand = new Random(1500);
+		rand = new Random(800);
 	}
 	
 	
@@ -256,8 +248,7 @@ class DecisionTree extends SupervisedLearner{
 						featA.takeRow(features.removeRow(i));
 						labA.takeRow(labels.removeRow(i));
 						
-					}
-					else{
+					} else{
 						featB.takeRow(features.removeRow(i));
 						labB.takeRow(labels.removeRow(i));
 					}
@@ -268,8 +259,7 @@ class DecisionTree extends SupervisedLearner{
 					if(features.row(i)[dividingColumn] == val){
 						featA.takeRow(features.removeRow(i));
 						labA.takeRow(labels.removeRow(i));
-					}
-					else{
+					} else{
 						featB.takeRow(features.removeRow(i));
 						labB.takeRow(labels.removeRow(i));
 					}
@@ -298,7 +288,6 @@ class DecisionTree extends SupervisedLearner{
 	}
 	
 	String name() {
-
 		return "DecisionTree";
 	}
 
@@ -323,8 +312,7 @@ class DecisionTree extends SupervisedLearner{
 						n =  node.a;
 					else
 						n =  node.b;
-				}
-				else{
+				} else{
 					
 					if(in[node.attribute] == node.pivot)
 						n = node.a;
@@ -340,10 +328,6 @@ class DecisionTree extends SupervisedLearner{
 				Vec.copy(out, o.label);
 				break;
 			}
-			
-
 		}
-	
 	}
 }
-
