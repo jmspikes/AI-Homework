@@ -107,7 +107,7 @@ class RandomForest extends SupervisedLearner{
 	double[] mode;
 	RandomForest(int amount){
 		this.amount = amount;
-		randy = new Random(800);
+		randy = new Random(1500);
 		holder = new ArrayList<Node>();
 		
 	}
@@ -328,6 +328,6 @@ class DecisionTree extends SupervisedLearner{
 				Vec.copy(out, o.label);
 				break;
 			}
-		}
+		}	
 	}
 }
