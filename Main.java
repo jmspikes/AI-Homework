@@ -25,9 +25,7 @@ public class Main {
 			if(counter % 168559772*18 == 0){
 				b.print();
 				System.exit(0);		
-			}
-				
-		
+			}	
 		}
 	}
 
@@ -43,8 +41,6 @@ class Board{
 	double epsilon = 0.03;
 	int y;
 	int x;
-	int moveX;
-	int moveY;
 	int bX = 20;
 	int bY = 10;
 	static double reward = 1;
@@ -287,13 +283,6 @@ class Board{
 	}
 	
 	public void print(){
-		for(int i = 0; i < scoreBoard.length; i++){
-			for(int j = 0; j < scoreBoard[0].length; j++){
-					System.out.print(scoreBoard[i][j] + " ");
-			}
-			System.out.println();
-		}
-		
 		for(int i = 0; i < scoreBoard.length; i++){
 			for(int j = 0; j < scoreBoard[0].length; j++){
 				System.out.print(displayBoard[i][j]);
